@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import jakarta.validation.ConstraintViolationException;
 import java.time.format.DateTimeParseException;
 
 import java.util.stream.Collectors;
@@ -29,6 +30,12 @@ public class GlobalExceptionHandler {
             .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
             .collect(Collectors.joining(", "));
         return new ErrorResponse("VALIDATION_ERROR", message);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleConstraintViolation(ConstraintViolationException e) {
+        return new ErrorResponse("VALIDATION_ERROR", e.getMessage());
     }
 
     @ExceptionHandler(DateTimeParseException.class)

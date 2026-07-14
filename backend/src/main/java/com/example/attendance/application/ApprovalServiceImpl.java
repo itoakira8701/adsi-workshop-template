@@ -1,5 +1,6 @@
 package com.example.attendance.application;
 
+import com.example.attendance.domain.exception.ResourceNotFoundException;
 import com.example.attendance.domain.model.ApprovalStatus;
 import com.example.attendance.domain.model.Employee;
 import com.example.attendance.domain.model.MonthlyApproval;
@@ -61,6 +62,9 @@ public class ApprovalServiceImpl implements ApprovalService {
 
     @Override
     public MonthlyApproval approve(Long employeeId, String yearMonth, Long approverId) {
+        employeeRepository.findById(employeeId)
+            .orElseThrow(() -> new ResourceNotFoundException("社員が見つかりません: id=" + employeeId));
+
         MonthlyApproval approval = approvalRepository.findByEmployeeIdAndYearMonth(employeeId, yearMonth)
             .orElseGet(() -> MonthlyApproval.builder()
                 .employeeId(employeeId)

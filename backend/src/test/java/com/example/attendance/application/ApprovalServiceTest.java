@@ -61,6 +61,8 @@ class ApprovalServiceTest {
     @Test
     @DisplayName("approve: PENDING → APPROVED に更新される")
     void approve_pending_updatesToApproved() {
+        when(employeeRepository.findById(1L))
+            .thenReturn(Optional.of(Employee.builder().id(1L).name("田中").build()));
         when(approvalRepository.findByEmployeeIdAndYearMonth(1L, "2026-07"))
             .thenReturn(Optional.empty());
         when(approvalRepository.save(any(MonthlyApproval.class)))
@@ -80,6 +82,8 @@ class ApprovalServiceTest {
     @Test
     @DisplayName("approve: 既に承認済みの場合は変更しない（冪等）")
     void approve_alreadyApproved_returnsWithoutChange() {
+        when(employeeRepository.findById(1L))
+            .thenReturn(Optional.of(Employee.builder().id(1L).name("田中").build()));
         var existing = MonthlyApproval.builder()
             .id(1L).employeeId(1L).yearMonth("2026-07")
             .status(ApprovalStatus.APPROVED).approverId(50L).build();
