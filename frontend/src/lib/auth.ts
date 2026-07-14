@@ -32,7 +32,7 @@ export async function login(
 export function logout(): void {
   localStorage.removeItem("token");
   localStorage.removeItem("employee");
-  window.location.href = "/login";
+  window.location.reload();
 }
 
 export function getStoredEmployee(): Employee | null {

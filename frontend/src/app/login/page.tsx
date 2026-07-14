@@ -24,7 +24,7 @@ export default function LoginPage() {
       if (err instanceof ApiError) {
         setError(err.message);
       } else {
-        setError("ログインに失敗しました");
+        setError("ログインに失敗しました: " + String(err));
       }
     } finally {
       setLoading(false);

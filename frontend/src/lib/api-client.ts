@@ -1,10 +1,6 @@
-const SAGEMAKER_BASE_PATH = "/codeeditor/default/absports/3000";
-
 export function withBasePath(path: string): string {
-  if (process.env.NEXT_PUBLIC_SAGEMAKER === "1") {
-    return `${SAGEMAKER_BASE_PATH}${path}`;
-  }
-  return path;
+  const base = process.env.NEXT_PUBLIC_BASE_PATH || "";
+  return `${base}${path}`;
 }
 
 export async function fetchApi<T>(

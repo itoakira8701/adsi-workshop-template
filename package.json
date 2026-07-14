@@ -6,6 +6,8 @@
     "dev:frontend": "cd frontend && npm run dev",
     "test:backend": "cd backend && ./gradlew test",
     "build:frontend": "cd frontend && npm run build",
-    "lint:frontend": "cd frontend && npm run lint"
+    "lint:frontend": "cd frontend && npm run lint",
+    "dev:sagemaker": "bash scripts/dev-sagemaker.sh",
+    "dev:sagemaker:stop": "pkill -f 'next start' ; pkill -f 'sagemaker-proxy' ; pkill -f 'bootRun' ; echo stopped"
   }
 }

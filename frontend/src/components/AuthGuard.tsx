@@ -1,17 +1,20 @@
 "use client";
 
-import { useMemo } from "react";
-import { redirect } from "next/navigation";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { isAuthenticated } from "@/lib/auth";
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
-  const authenticated = useMemo(() => {
-    if (typeof window === "undefined") return true;
-    return isAuthenticated();
-  }, []);
+  const router = useRouter();
 
-  if (!authenticated) {
-    redirect("/login");
+  useEffect(() => {
+    if (!isAuthenticated()) {
+      router.replace("/login");
+    }
+  }, [router]);
+
+  if (typeof window !== "undefined" && !isAuthenticated()) {
+    return null;
   }
 
   return <>{children}</>;
