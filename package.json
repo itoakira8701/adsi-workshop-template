@@ -1,0 +1,11 @@
+{
+  "name": "attendance-system",
+  "private": true,
+  "scripts": {
+    "dev:backend": "cd backend && ./gradlew bootRun",
+    "dev:frontend": "cd frontend && npm run dev",
+    "test:backend": "cd backend && ./gradlew test",
+    "build:frontend": "cd frontend && npm run build",
+    "lint:frontend": "cd frontend && npm run lint"
+  }
+}
