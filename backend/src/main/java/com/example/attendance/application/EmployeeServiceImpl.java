@@ -1,5 +1,6 @@
 package com.example.attendance.application;
 
+import com.example.attendance.domain.exception.ResourceNotFoundException;
 import com.example.attendance.domain.model.Employee;
 import com.example.attendance.domain.model.Role;
 import com.example.attendance.domain.repository.EmployeeRepository;
@@ -33,7 +34,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Transactional(readOnly = true)
     public Employee getById(Long id) {
         return employeeRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("社員が見つかりません: id=" + id));
+            .orElseThrow(() -> new ResourceNotFoundException("社員が見つかりません: id=" + id));
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.example.attendance.presentation.controller;
 
+import com.example.attendance.domain.exception.ResourceNotFoundException;
 import com.example.attendance.presentation.dto.ErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -26,6 +27,12 @@ public class GlobalExceptionHandler {
             .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
             .collect(Collectors.joining(", "));
         return new ErrorResponse("VALIDATION_ERROR", message);
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleNotFound(ResourceNotFoundException e) {
+        return new ErrorResponse("NOT_FOUND", e.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
