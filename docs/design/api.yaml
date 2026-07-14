@@ -1,0 +1,555 @@
+openapi: 3.0.3
+info:
+  title: 勤怠管理システム API
+  version: 1.0.0
+  description: 社員の出退勤管理・月次承認を行うREST API
+
+servers:
+  - url: http://localhost:8080/api
+    description: ローカル開発
+
+paths:
+  # === 認証 ===
+  /auth/login:
+    post:
+      tags: [認証]
+      summary: ログイン
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: ログイン成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: 認証失敗
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/me:
+    get:
+      tags: [認証]
+      summary: ログインユーザー情報取得
+      operationId: getMe
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: ユーザー情報
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployeeResponse'
+
+  # === 打刻 ===
+  /attendances/clock-in:
+    post:
+      tags: [打刻]
+      summary: 出勤打刻
+      operationId: clockIn
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 打刻成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttendanceResponse'
+        '409':
+          description: 既に出勤済み
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /attendances/clock-out:
+    post:
+      tags: [打刻]
+      summary: 退勤打刻
+      operationId: clockOut
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 打刻成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttendanceResponse'
+        '400':
+          description: 出勤記録なし
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /attendances/today:
+    get:
+      tags: [打刻]
+      summary: 本日の打刻状態取得
+      operationId: getToday
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 本日の勤怠（未打刻は null）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttendanceResponse'
+
+  # === 勤怠一覧 ===
+  /attendances/me:
+    get:
+      tags: [勤怠一覧]
+      summary: 自分の月次勤怠一覧
+      operationId: getMyAttendances
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: yearMonth
+          in: query
+          required: true
+          schema:
+            type: string
+            example: "2026-07"
+      responses:
+        '200':
+          description: 勤怠一覧
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonthlyAttendanceResponse'
+
+  /attendances/employees/{employeeId}:
+    get:
+      tags: [勤怠一覧]
+      summary: 指定社員の月次勤怠一覧（承認者/人事用）
+      operationId: getEmployeeAttendances
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: employeeId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: yearMonth
+          in: query
+          required: true
+          schema:
+            type: string
+            example: "2026-07"
+      responses:
+        '200':
+          description: 勤怠一覧
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonthlyAttendanceResponse'
+        '403':
+          description: 権限なし
+
+  # === 月次承認 ===
+  /approvals:
+    get:
+      tags: [承認]
+      summary: 承認対象一覧（年月指定）
+      operationId: getApprovals
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: yearMonth
+          in: query
+          required: true
+          schema:
+            type: string
+            example: "2026-07"
+      responses:
+        '200':
+          description: 承認一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ApprovalSummaryResponse'
+        '403':
+          description: 権限なし
+
+  /approvals/{employeeId}:
+    put:
+      tags: [承認]
+      summary: 月次勤怠を承認
+      operationId: approve
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: employeeId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApproveRequest'
+      responses:
+        '200':
+          description: 承認成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalResponse'
+        '403':
+          description: 権限なし
+        '404':
+          description: 対象なし
+
+  # === 社員マスタ ===
+  /employees:
+    get:
+      tags: [社員マスタ]
+      summary: 社員一覧（人事用）
+      operationId: getEmployees
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 社員一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EmployeeResponse'
+        '403':
+          description: 権限なし
+    post:
+      tags: [社員マスタ]
+      summary: 社員登録（人事用）
+      operationId: createEmployee
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEmployeeRequest'
+      responses:
+        '201':
+          description: 登録成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployeeResponse'
+        '400':
+          description: バリデーションエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '403':
+          description: 権限なし
+        '409':
+          description: 社員コードまたはメールアドレスが重複
+
+  /employees/{id}:
+    get:
+      tags: [社員マスタ]
+      summary: 社員詳細（人事用）
+      operationId: getEmployee
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 社員情報
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployeeResponse'
+        '403':
+          description: 権限なし
+        '404':
+          description: 社員が存在しない
+    put:
+      tags: [社員マスタ]
+      summary: 社員更新（人事用）
+      operationId: updateEmployee
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateEmployeeRequest'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployeeResponse'
+        '400':
+          description: バリデーションエラー
+        '403':
+          description: 権限なし
+        '404':
+          description: 社員が存在しない
+        '409':
+          description: 楽観ロックエラー（他者が更新済み）
+    delete:
+      tags: [社員マスタ]
+      summary: 社員削除/無効化（人事用）
+      operationId: deleteEmployee
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: 削除成功（論理削除）
+        '403':
+          description: 権限なし
+        '404':
+          description: 社員が存在しない
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # --- 認証 ---
+    LoginRequest:
+      type: object
+      required: [employeeCode, password]
+      properties:
+        employeeCode:
+          type: string
+          example: "tanaka001"
+        password:
+          type: string
+          format: password
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        employee:
+          $ref: '#/components/schemas/EmployeeResponse'
+
+    # --- 社員 ---
+    EmployeeResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        employeeCode:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [EMPLOYEE, APPROVER, HR]
+        active:
+          type: boolean
+
+    CreateEmployeeRequest:
+      type: object
+      required: [employeeCode, name, email, password, role]
+      properties:
+        employeeCode:
+          type: string
+          minLength: 1
+          maxLength: 50
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        role:
+          type: string
+          enum: [EMPLOYEE, APPROVER, HR]
+
+    UpdateEmployeeRequest:
+      type: object
+      required: [name, email, role, version]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [EMPLOYEE, APPROVER, HR]
+        version:
+          type: integer
+          format: int64
+
+    # --- 勤怠 ---
+    AttendanceResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        workDate:
+          type: string
+          format: date
+        clockInTime:
+          type: string
+          example: "09:15"
+        clockOutTime:
+          type: string
+          nullable: true
+          example: "17:30"
+        workingMinutes:
+          type: integer
+          nullable: true
+        overtimeMinutes:
+          type: integer
+          nullable: true
+
+    MonthlyAttendanceResponse:
+      type: object
+      properties:
+        yearMonth:
+          type: string
+          example: "2026-07"
+        employeeId:
+          type: integer
+          format: int64
+        employeeName:
+          type: string
+        attendances:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttendanceResponse'
+        totalWorkingMinutes:
+          type: integer
+        totalOvertimeMinutes:
+          type: integer
+        approvalStatus:
+          type: string
+          enum: [PENDING, APPROVED]
+
+    # --- 承認 ---
+    ApprovalSummaryResponse:
+      type: object
+      properties:
+        employeeId:
+          type: integer
+          format: int64
+        employeeName:
+          type: string
+        yearMonth:
+          type: string
+        status:
+          type: string
+          enum: [PENDING, APPROVED]
+        totalWorkingMinutes:
+          type: integer
+        totalOvertimeMinutes:
+          type: integer
+
+    ApproveRequest:
+      type: object
+      required: [yearMonth]
+      properties:
+        yearMonth:
+          type: string
+          example: "2026-07"
+
+    ApprovalResponse:
+      type: object
+      properties:
+        employeeId:
+          type: integer
+          format: int64
+        yearMonth:
+          type: string
+        status:
+          type: string
+          enum: [PENDING, APPROVED]
+        approverName:
+          type: string
+        approvedAt:
+          type: string
+          format: date-time
+
+    # --- エラー ---
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+
+    ValidationErrorResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          example: "VALIDATION_ERROR"
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
