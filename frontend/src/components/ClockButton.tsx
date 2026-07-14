@@ -2,15 +2,7 @@
 
 import { useState } from "react";
 import { fetchApi, ApiError } from "@/lib/api-client";
-
-interface AttendanceData {
-  id: number;
-  workDate: string;
-  clockInTime: string | null;
-  clockOutTime: string | null;
-  workingMinutes: number | null;
-  overtimeMinutes: number | null;
-}
+import { AttendanceData } from "@/lib/types";
 
 interface ClockButtonProps {
   today: AttendanceData | null;

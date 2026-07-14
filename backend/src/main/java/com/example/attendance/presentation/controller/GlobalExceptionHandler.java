@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.time.format.DateTimeParseException;
+
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
@@ -27,6 +29,12 @@ public class GlobalExceptionHandler {
             .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
             .collect(Collectors.joining(", "));
         return new ErrorResponse("VALIDATION_ERROR", message);
+    }
+
+    @ExceptionHandler(DateTimeParseException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleDateTimeParse(DateTimeParseException e) {
+        return new ErrorResponse("BAD_REQUEST", "日付形式が不正です。YYYY-MM 形式で指定してください");
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)

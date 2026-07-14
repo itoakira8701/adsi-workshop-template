@@ -4,23 +4,7 @@ import { useEffect, useState } from "react";
 import AuthGuard from "@/components/AuthGuard";
 import Navigation from "@/components/Navigation";
 import { fetchApi } from "@/lib/api-client";
-
-interface AttendanceData {
-  id: number;
-  workDate: string;
-  clockInTime: string | null;
-  clockOutTime: string | null;
-  workingMinutes: number | null;
-  overtimeMinutes: number | null;
-}
-
-interface MonthlyData {
-  yearMonth: string;
-  employeeId: number;
-  attendances: AttendanceData[];
-  totalWorkingMinutes: number;
-  totalOvertimeMinutes: number;
-}
+import { MonthlyData } from "@/lib/types";
 
 export default function AttendancesPage() {
   return (

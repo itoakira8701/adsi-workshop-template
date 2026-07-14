@@ -6,15 +6,7 @@ import Navigation from "@/components/Navigation";
 import ClockButton from "@/components/ClockButton";
 import { fetchApi } from "@/lib/api-client";
 import { getStoredEmployee } from "@/lib/auth";
-
-interface AttendanceData {
-  id: number;
-  workDate: string;
-  clockInTime: string | null;
-  clockOutTime: string | null;
-  workingMinutes: number | null;
-  overtimeMinutes: number | null;
-}
+import { AttendanceData } from "@/lib/types";
 
 export default function DashboardPage() {
   return (
